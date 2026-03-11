@@ -8,4 +8,5 @@ build/
 .DS_Store
 coverage/
 .react-router/
-tsconfig.tsbuildinfo
+*.tsbuildinfo
+docs/
