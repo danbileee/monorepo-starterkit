@@ -1,98 +1,93 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# @starterkit/api
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS v11 REST API with TypeORM, PostgreSQL, and Sentry error tracking.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- **NestJS v11** — `NodeNext` module resolution
+- **TypeORM v0.3** — PostgreSQL via `pg`
+- **Sentry v10** — `@sentry/nestjs` with `@sentry/profiling-node`
+- **class-validator** / **class-transformer** — request DTO validation
+- **Zod v4** — shared schemas from `@starterkit/interface`
+- **Jest v30** — unit and e2e tests
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Scripts
 
 ```bash
-$ pnpm install
+pnpm dev           # Watch mode (port 3000)
+pnpm build         # Compile TypeScript to dist/
+pnpm start         # Run compiled dist/main.js
+pnpm type-check    # TypeScript check without emit
+pnpm test          # Unit tests
+pnpm test:watch    # Unit tests in watch mode
+pnpm test:cov      # Unit tests with coverage report
+pnpm test:e2e      # End-to-end tests (Supertest)
 ```
 
-## Compile and run the project
+## Environment variables
+
+Create `apps/api/.env`:
+
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=starterkit_dev
+DATABASE_SSL=false
+NODE_ENV=development
+PORT=3000
+WEB_URL=http://localhost:5173
+SENTRY_DSN=
+```
+
+All required variables use `config.getOrThrow<T>()`, which causes the process to fail fast at startup if any are missing.
+
+## Project structure
+
+```
+src/
+├── instrument.ts       Sentry initialisation — MUST be first import in main.ts
+├── main.ts             Bootstrap: CORS, global ValidationPipe, listen
+├── app.module.ts       Root module: SentryModule, ConfigModule, TypeOrmModule
+├── app.controller.ts   GET /health
+└── app.service.ts      AppService.getHealth()
+
+test/
+├── app.e2e-spec.ts     Supertest e2e suite
+└── jest-e2e.json       e2e Jest config
+```
+
+## Conventions
+
+### NodeNext imports
+
+All intra-package imports use explicit `.js` extensions (required by `NodeNext` module resolution). Jest strips these automatically via `moduleNameMapper`:
+
+```typescript
+import { AppService } from "./app.service.js";
+```
+
+### Sentry setup
+
+`instrument.ts` must be the **first import** in `main.ts`. Unhandled exceptions are captured by `SentryGlobalFilter`, registered as `APP_FILTER` in `AppModule.providers`.
+
+### Validation
+
+Global `ValidationPipe` runs with `whitelist: true`, `forbidNonWhitelisted: true`, and `transform: true`. DTO classes use `class-validator` decorators; shared shape contracts use Zod schemas from `@starterkit/interface`.
+
+### TypeORM entities and migrations
+
+- Entity files follow the `**/*.entity.ts` naming convention and are auto-discovered.
+- `synchronize: true` is enabled in `development` only — use migrations in production.
+- Migration files go in `src/migrations/`.
+
+### Adding a feature module
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+npx nest generate module features/my-feature
+npx nest generate controller features/my-feature
+npx nest generate service features/my-feature
 ```
 
-## Run tests
-
-```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Add a `*.entity.ts` in the module directory — TypeORM will pick it up automatically.

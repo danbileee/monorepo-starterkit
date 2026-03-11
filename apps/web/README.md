@@ -1,87 +1,85 @@
-# Welcome to React Router!
+# @starterkit/web
 
-A modern, production-ready template for building full-stack React applications using React Router.
+React Router v7 web application with SSR, Tailwind CSS v4, and shadcn/ui.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Stack
 
-## Features
+- **React Router v7** — SSR enabled, framework mode
+- **Vite v7** — bundler with `vite-tsconfig-paths`
+- **Tailwind CSS v4** — via `@tailwindcss/vite` plugin
+- **shadcn/ui** — component library built on Base UI
+- **Axios** — API client with auth interceptors
+- **Zod v4** — shared schemas from `@starterkit/interface`
+- **Sentry v10** — `@sentry/react` with browser tracing and replay
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
+## Scripts
 
 ```bash
-npm install
+pnpm dev           # Dev server with HMR (port 5173)
+pnpm build         # Production build to build/
+pnpm start         # Serve production build
+pnpm type-check    # react-router typegen + tsc --noEmit
 ```
 
-### Development
+## Environment variables
 
-Start the development server with HMR:
+Create `apps/web/.env`:
+
+```
+VITE_API_BASE_URL=http://localhost:3000
+VITE_SENTRY_DSN=
+```
+
+## Project structure
+
+```
+app/
+├── instrument.ts         Sentry initialisation — imported first in root.tsx
+├── root.tsx              HTML shell, Layout, global ErrorBoundary
+├── entry.client.tsx      Client-side hydration with Sentry error callbacks
+├── routes.ts             Route config (React Router framework mode)
+├── app.css               Global styles, Tailwind CSS v4 entrypoint
+├── lib/
+│   ├── api.ts            Axios instance with auth token + 401 interceptors
+│   └── utils.ts          cn() helper (clsx + tailwind-merge)
+├── components/
+│   └── ui/               shadcn/ui components (Button, Card, …)
+└── routes/
+    └── home.tsx          Example route: health check + schema demo
+```
+
+## Routing
+
+Routes are declared in `app/routes.ts` using the `@react-router/dev/routes` API. SSR is enabled by default in `react-router.config.ts`. Use `loader` for server-side data fetching and `clientLoader` for client-only fetches.
+
+## API client
+
+`app/lib/api.ts` exports a pre-configured Axios instance:
+
+- Base URL from `VITE_API_BASE_URL`
+- Attaches `Authorization: Bearer <token>` from `localStorage`
+- Redirects to `/login` on 401 responses
+
+## shadcn/ui
+
+Components live in `app/components/ui/`. Add new ones with:
 
 ```bash
-npm run dev
+pnpx shadcn@latest add <component> --defaults
 ```
 
-Your application will be available at `http://localhost:5173`.
+The `~/` path alias maps to `app/`, so imports look like `~/components/ui/button`.
 
-## Building for Production
+## Sentry
 
-Create a production build:
+`instrument.ts` is imported before anything else in both `root.tsx` and `entry.client.tsx`. Error tracking in `hydrateRoot` uses manual `captureException` calls (instead of `reactErrorHandler`) to stay compatible with `exactOptionalPropertyTypes`.
 
-```bash
-npm run build
-```
+## Docker
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+A `Dockerfile` is included for containerised production deployments. The production build outputs to:
 
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+build/
+├── client/    Static assets (served by CDN or reverse proxy)
+└── server/    SSR server entry (node build/server/index.js)
 ```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
