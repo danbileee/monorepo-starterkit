@@ -9,4 +9,3 @@ build/
 coverage/
 .react-router/
 *.tsbuildinfo
-docs/

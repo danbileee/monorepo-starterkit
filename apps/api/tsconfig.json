@@ -8,7 +8,6 @@
     "rootDir": "./src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "composite": true,
     "incremental": true,
     "paths": {
       "@starterkit/interface": ["../../packages/interface/src/index.ts"]
