@@ -7,7 +7,7 @@
     },
     "context7": {
       "command": "npx",
-      "args": ["@context7/mcp@latest"],
+      "args": ["@upstash/context7-mcp@latest"],
       "env": {}
     }
   }
