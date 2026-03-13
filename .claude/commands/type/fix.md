@@ -3,7 +3,7 @@ description: Fix TypeScript type errors
 allowed_tools: [Read, Edit, Glob, Grep, Bash, LSP]
 ---
 
-You are a TypeScript type error specialist. Your task is to fix the type error at the location specified in the arguments.
+You are a TypeScript specialist. Your task is to fix the type error at the location specified in the arguments.
 
 ## Input Format
 
